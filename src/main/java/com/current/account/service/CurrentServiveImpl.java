@@ -31,7 +31,7 @@ public class CurrentServiveImpl  implements ICurrentService{
 	List<EntityTransaction> listTransaction;
 	List<String> doc;
 	Date dt = new Date();
-	
+	Boolean ope = false;
 	@Override
 	public Flux<CurrentEntity> allCurrent() {
 		// TODO Auto-generated method stub
@@ -79,27 +79,56 @@ public class CurrentServiveImpl  implements ICurrentService{
 	
 		return repository.findByNumAcc(numAcc)
 				.flatMap(p ->{
-					transaction = new EntityTransaction();
-					 transaction.setCashA(p.getCash());
-					if(tipo.equals("r") && p.getCash() >= cash) {
-						p.setCash(p.getCash() - cash);
-					}else if (tipo.equals("d")){
-						p.setCash( p.getCash() + cash);
-					}
-					transaction.setType(tipo);
-					 transaction.setCashO(cash);
-					 transaction.setCashT(p.getCash());
-					 transaction.setDateTra(dt);
-					listTransaction = new ArrayList<>();
-					if(p.getTransactions() != null) {
+						transaction = new EntityTransaction();
+						listTransaction = new ArrayList<>();
+						transaction.setCashA(p.getCash());
+										
+							if(p.getNumTran() > 0) {
+								p.setNumTran(p.getNumTran() -1);
+								transaction.setCommi(0.0);
+								if(tipo.equals("r") && p.getCash() >= cash) {
+									ope = true;
+									p.setCash(p.getCash() - cash);
+								}else if (tipo.equals("d")){
+									ope = true;
+									p.setCash( p.getCash() + cash);
+								}
+							}else {
+								
+								if(tipo.equals("r") && p.getCash() >= cash + p.getCommi()) {
+									ope = true;
+									p.setCash(p.getCash() - cash - p.getCommi());
+									transaction.setCommi(p.getCommi());
+								}else if (tipo.equals("d")){
+									if(p.getCash() != 0.0) {
+										ope = true;
+										p.setCash( p.getCash() + cash - p.getCommi());
+									}
+								}
+								
+							}
+						
+					
+					if(ope) {
+						transaction.setType(tipo);
+						transaction.setCashO(cash);
+						transaction.setCashT(p.getCash());
+						transaction.setDateTra(dt);
+						
+						if(p.getTransactions() != null) {
 						p.getTransactions().forEach(transac-> {
-						listTransaction.add(transac);
-						});
+							listTransaction.add(transac);
+							});
+						}
+						listTransaction.add(transaction);
+						p.setTransactions(listTransaction);
+						return repository.save(p);
+					}else {
+						
+						return Mono.just(p);
 					}
-					listTransaction.add(transaction);
-					p.setTransactions(listTransaction);
-			return repository.save(p);
-			});
+						
+				});
 	}
 
 	@Override

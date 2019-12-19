@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,15 +46,8 @@ public class RestControllerCurrent {
 		return imple.saveCurrent(current);
 	}
 	
-	/*@PutMapping("/updCurrent")
-	public Mono<CurrentEntity> updCurrent(@RequestBody final CurrentEntity current){
-		return imple.saveCurrent(current);
-	}
-	*/
-	@DeleteMapping("/dltCurrent/{id}")
-	public Mono<Void> dltCurrent(@PathVariable String id){
-		return imple.dltCurrent(id);
-	}
+
+
 	
 	@PostMapping("/updTransancionesCurrent/{numAcc}/{tipo}/{cash}")
 	public Mono<CurrentEntity> updCurrentCash(@PathVariable("numAcc") String numAcc 
@@ -68,5 +62,17 @@ public class RestControllerCurrent {
 	
 			return imple.payCreditCard(numAcc,numCard,cash);
 
+	}
+	
+	@PutMapping("/updCurrent/{id}")
+	public Mono<CurrentEntity> updCurrent(@PathVariable("id") String id,@RequestBody final CurrentEntity current){
+		current.setCodCur(id);
+		return imple.updCurrent(current);
+	}
+	
+	
+	@DeleteMapping("/dltCurrent/{id}")
+	public Mono<Void> dltCurrent(@PathVariable String id){
+		return imple.dltCurrent(id);
 	}
 }
