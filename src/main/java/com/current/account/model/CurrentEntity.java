@@ -25,9 +25,9 @@ public class CurrentEntity {
 	
 	private Double commi;
 	
+	private String bank;
 	private String status;
 	
-	private List<EntityTransaction> transactions;
 	
 	private List<HeadLineEntity> heads;
 	
@@ -107,13 +107,13 @@ public class CurrentEntity {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-
-	public List<EntityTransaction> getTransactions() {
-		return transactions;
+	
+	public String getBank() {
+		return bank;
 	}
 
-	public void setTransactions(List<EntityTransaction> transactions) {
-		this.transactions = transactions;
+	public void setBank(String bank) {
+		this.bank = bank;
 	}
 
 	public List<HeadLineEntity> getHeads() {

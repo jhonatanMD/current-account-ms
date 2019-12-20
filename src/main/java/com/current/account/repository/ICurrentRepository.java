@@ -19,8 +19,8 @@ public interface ICurrentRepository  extends ReactiveMongoRepository<CurrentEnti
 	@Query("{ 'heads.docClien': {$in:[ ?0 ]} , 'typeCli' : ?1} ")
 	Flux<CurrentEntity> findBytitularesByDoc(List<String> doc,String typeCli);
 	
-	@Query("{ 'heads.docClien': {$in:[ ?0 ]} , 'typeCli' : ?1 , 'profile' : ?2} ")
-	Flux<CurrentEntity> findBytitularesByDocProfiles(List<String> doc,String typeCli,String profile);
+	@Query("{ 'heads.docClien': {$in:[ ?0 ]} , 'typeCli' : ?1 , 'profile' : ?2 ,'bank':?3} ")
+	Flux<CurrentEntity> findBytitularesByDocProfiles(List<String> doc,String typeCli,String profile,String bank);
 
 	@Query("{'heads.docClien':  ?0 } ")
 	Flux<CurrentEntity> findByDoc(String doc);

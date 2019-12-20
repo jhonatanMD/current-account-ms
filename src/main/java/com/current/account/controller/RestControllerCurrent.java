@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.current.account.model.CurrentEntity;
+import com.current.account.model.EntityTransaction;
 import com.current.account.service.ICurrentService;
 
 import reactor.core.publisher.Flux;
@@ -50,17 +51,17 @@ public class RestControllerCurrent {
 
 	
 	@PostMapping("/updTransancionesCurrent/{numAcc}/{tipo}/{cash}")
-	public Mono<CurrentEntity> updCurrentCash(@PathVariable("numAcc") String numAcc 
+	public Mono<EntityTransaction> updCurrentCash(@PathVariable("numAcc") String numAcc 
 			,@PathVariable("tipo") String tipo ,@PathVariable("cash")  Double cash){
-			return imple.transactionsCurrent(numAcc,tipo,cash);
+			return imple.opeCurrent(numAcc,tipo,cash);
 	}
 	
-	@PostMapping("/payCreditCard/{numAcc}/{numCard}/{cash}")
-	Mono<CurrentEntity> payCreditCard(@PathVariable("numAcc") String numAcc,
+	@PostMapping("/payCreditCard/{numAcc}/{numCard}/{cash}/{type}")
+	Mono<EntityTransaction> payCreditCard(@PathVariable("numAcc") String numAcc,
 			@PathVariable("numCard") String numCard,
-			@PathVariable("cash")  Double cash){
+			@PathVariable("cash")  Double cash,@PathVariable("type") String type){
 	
-			return imple.payCreditCard(numAcc,numCard,cash);
+			return imple.opeMovement(numAcc,numCard,cash,type);
 
 	}
 	

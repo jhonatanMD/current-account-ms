@@ -1,6 +1,7 @@
 package com.current.account.service;
 
 import com.current.account.model.CurrentEntity;
+import com.current.account.model.EntityTransaction;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -11,7 +12,7 @@ public interface ICurrentService {
 	Mono<CurrentEntity> updCurrent(final CurrentEntity current);
 	Mono<Void> dltCurrent(String id);
 	Mono<CurrentEntity> findByNumAcc(String numAcc);
-	Mono<CurrentEntity> transactionsCurrent(String numAcc,String tipo,Double cash);
+	Mono<EntityTransaction> opeCurrent(String numAcc,String tipo,Double cash);
 	Flux<CurrentEntity> findByDoc(String doc);
-	Mono<CurrentEntity> payCreditCard(String numAcc,String numCard,Double cash);
+	Mono<EntityTransaction> opeMovement(String numAcc,String numCard,Double cash,String type);
 }

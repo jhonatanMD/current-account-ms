@@ -5,15 +5,13 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import com.current.account.model.CurrentEntity;
-import com.current.account.model.EntityCreditCard;
 import com.current.account.model.EntityTransaction;
 import com.current.account.repository.ICurrentRepository;
+import com.current.account.webclient.CallWebClient;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,16 +19,19 @@ import reactor.core.publisher.Mono;
 @Service
 public class CurrentServiveImpl  implements ICurrentService{
 	
-	WebClient client = WebClient.builder().baseUrl("http://localhost:8881")
-			.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+
 
 	@Autowired
 	ICurrentRepository repository;
 	
+	@Autowired
+	@Qualifier("webClient")
+	CallWebClient webClient;
+	
 	EntityTransaction transaction;
 	List<EntityTransaction> listTransaction;
 	List<String> doc;
-	Date dt = new Date();
+	
 	Boolean ope = false;
 	@Override
 	public Flux<CurrentEntity> allCurrent() {
@@ -49,7 +50,7 @@ public class CurrentServiveImpl  implements ICurrentService{
 		}else  {
 			
 			current.getHeads().forEach(head -> doc.add(head.getDocClien()));
-			 return repository.findBytitularesByDocProfiles(doc,"S",current.getProfile())
+			 return repository.findBytitularesByDocProfiles(doc,"S",current.getProfile(),current.getBank())
 					.switchIfEmpty(repository.save(current).flatMap(sv->{
 				return Mono.just(sv);
 			})).next();
@@ -75,12 +76,11 @@ public class CurrentServiveImpl  implements ICurrentService{
 	}
 
 	@Override
-	public Mono<CurrentEntity> transactionsCurrent(String numAcc, String tipo, Double cash) {
+	public Mono<EntityTransaction> opeCurrent(String numAcc, String tipo, Double cash) {
 	
 		return repository.findByNumAcc(numAcc)
 				.flatMap(p ->{
 						transaction = new EntityTransaction();
-						listTransaction = new ArrayList<>();
 						transaction.setCashA(p.getCash());
 										
 							if(p.getNumTran() > 0) {
@@ -103,29 +103,20 @@ public class CurrentServiveImpl  implements ICurrentService{
 									if(p.getCash() != 0.0) {
 										ope = true;
 										p.setCash( p.getCash() + cash - p.getCommi());
+										transaction.setCommi(p.getCommi());
 									}
 								}
-								
 							}
-						
-					
 					if(ope) {
+						transaction.setNumAcc(numAcc);
 						transaction.setType(tipo);
 						transaction.setCashO(cash);
 						transaction.setCashT(p.getCash());
-						transaction.setDateTra(dt);
-						
-						if(p.getTransactions() != null) {
-						p.getTransactions().forEach(transac-> {
-							listTransaction.add(transac);
-							});
-						}
-						listTransaction.add(transaction);
-						p.setTransactions(listTransaction);
-						return repository.save(p);
+						transaction.setDateTra(new Date());
+					    repository.save(p).subscribe();
+						return Mono.just(transaction);
 					}else {
-						
-						return Mono.just(p);
+						return Mono.just(transaction);
 					}
 						
 				});
@@ -138,30 +129,27 @@ public class CurrentServiveImpl  implements ICurrentService{
 	}
 
 	@Override
-	public Mono<CurrentEntity> payCreditCard(String numAcc, String numCard, Double cash) {
+	public Mono<EntityTransaction> opeMovement(String numAcc, String numCard, Double cash,String type) {
 		// TODO Auto-generated method stub
+		transaction = new EntityTransaction();
 		return repository.findByNumAcc(numAcc).flatMap(p ->{
-			transaction = new EntityTransaction();
-			transaction.setCashA(p.getCash());
-			if(p.getCash() >= cash) {
-				p.setCash(p.getCash() - cash);
-				client.post().uri("/credit-card/api/updTransancionesCreditCard/"+numCard+"/p/"+cash)
-				.retrieve().bodyToMono(EntityCreditCard.class).subscribe();	
+			
+			if(p.getCash() >= cash && p.getNumTran() > 0) {
+				if(type.equals("CC")) {
+					return	webClient.payCreditSC(transaction, p, numAcc, numCard, cash);
+				}else if(type.equals("SA")) {
+					return webClient.opeSaving(transaction, p, numAcc, type, cash);
+				}
+				
+			
+			}else if(p.getCash() >= cash + p.getCommi() && p.getNumTran() == 0){
+				if(type.equals("CC")) {
+					return	webClient.payCreditCC(transaction, p, numAcc, numCard, cash);	
+				}
 			}
-			transaction.setType("pago");
-			 transaction.setCashO(cash);
-			 transaction.setCashT(p.getCash());
-			 transaction.setDateTra(dt);
-			listTransaction = new ArrayList<>();
-			if(p.getTransactions()!=null)
-			{
-				p.getTransactions().forEach(transac-> {
-					listTransaction.add(transac);
-				});
-			}
-			listTransaction.add(transaction);
-			p.setTransactions(listTransaction);
-	return repository.save(p);
+			
+			return Mono.just(transaction);
+			
 		});
 	}
 

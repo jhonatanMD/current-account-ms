@@ -9,6 +9,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 
 public class EntityTransaction {	
+	
+	@NotEmpty(message = "should not be empty")
+	private String numAcc;
+	
 	@NotEmpty(message = "should not be empty")
 	private Double cashO;
 	
@@ -28,7 +32,13 @@ public class EntityTransaction {
 	private Date dateTra;
 
 	
+	public String getNumAcc() {
+		return numAcc;
+	}
 
+	public void setNumAcc(String numAcc) {
+		this.numAcc = numAcc;
+	}
 
 	public Double getCashO() {
 		return cashO;
