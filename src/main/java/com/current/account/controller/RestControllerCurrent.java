@@ -56,12 +56,12 @@ public class RestControllerCurrent {
 			return imple.opeCurrent(numAcc,tipo,cash);
 	}
 	
-	@PostMapping("/payCreditCard/{numAcc}/{numCard}/{cash}/{type}")
-	Mono<EntityTransaction> payCreditCard(@PathVariable("numAcc") String numAcc,
-			@PathVariable("numCard") String numCard,
+	@PostMapping("/opeMovement/{numAcc}/{numDest}/{cash}/{type}")
+	Mono<EntityTransaction> opeMovement(@PathVariable("numAcc") String numAcc,
+			@PathVariable("numDest") String numDest,
 			@PathVariable("cash")  Double cash,@PathVariable("type") String type){
 	
-			return imple.opeMovement(numAcc,numCard,cash,type);
+			return imple.opeMovement(numAcc,numDest,cash,type);
 
 	}
 	

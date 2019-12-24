@@ -23,67 +23,46 @@ public class CallWebClient {
 	 @Autowired
 		ICurrentRepository repository;
 	 
-	 public Mono<EntityTransaction> payCreditSC(EntityTransaction transaction,CurrentEntity p  ,
-			 String numAcc,String numCard,Double cash){
-		return client.post().uri("/credit-card/api/updTransancionesCreditCard/"+numCard+"/p/"+cash)
+	 public Mono<EntityTransaction> payCredit(EntityTransaction transaction,CurrentEntity p  ,
+			 String numAcc,String numDest,Double cash,Double commi,int n){
+		return client.post().uri("/credit-card/api/updTransancionesCreditCard/"+numDest+"/p/"+cash)
 				.retrieve().bodyToMono(EntityTransaction.class).flatMap(tran -> {
 					
 			 		transaction.setCashA(p.getCash());
-					p.setNumTran(p.getNumTran() -1);
-					p.setCash(p.getCash() - cash);
+					p.setNumTran(p.getNumTran() - n);
+					p.setCash(p.getCash() - cash - commi);
 					transaction.setCashO(cash);
 					transaction.setCashT(p.getCash());
 					transaction.setNumAcc(numAcc);
-					transaction.setCommi(0.0);
+					transaction.setCommi(commi);
 					transaction.setType("r");
 					transaction.setDateTra(tran.getDateTra());
 					
-					repository.save(p).subscribe();
-			 return Mono.just(transaction);
-			
-		});	
-		 
-	 }
-	 
-	 
-	 public Mono<EntityTransaction> payCreditCC(EntityTransaction transaction,CurrentEntity p  ,
-			 String numAcc,String numCard,Double cash){
-		 return client.post().uri("/credit-card/api/updTransancionesCreditCard/"+numCard+"/p/"+cash)
-					.retrieve().bodyToMono(EntityTransaction.class).flatMap(tran -> {
-						
-				 		transaction.setCashA(p.getCash());
-						p.setCash(p.getCash() - cash - p.getCommi());
-						transaction.setCashO(cash);
-						transaction.setCashT(p.getCash());
-						transaction.setNumAcc(numAcc);
-						transaction.setCommi(p.getCommi());
-						transaction.setType("r");
-						transaction.setDateTra(tran.getDateTra());
-						repository.save(p).subscribe();
-						
-				 return Mono.just(transaction);
-				
+					return repository.save(p).flatMap(t -> {
+						 return Mono.just(transaction);
+					});
 			});	
-	 }
+		}
 	 
-	 
-	 public Mono<EntityTransaction> opeSaving(EntityTransaction transaction,CurrentEntity p  ,String numAcc , String type,Double cash){
+	 public Mono<EntityTransaction> opeSaving(EntityTransaction transaction,CurrentEntity p  ,String numAcc ,String numDest,Double cash
+			 ,Double commi,int n){
 		  
-			return  client.post().uri("/saving-account/api/updTransancionSaving/"+numAcc+"/d/"+cash)
+			return  client.post().uri("/saving-account/api/updTransancionSaving/"+numDest+"/d/"+cash)
 				.retrieve().bodyToMono(EntityTransaction.class).flatMap(tran -> {
 					
 			 		transaction.setCashA(p.getCash());
-					p.setCash(p.getCash() - cash - p.getCommi());
+			 		p.setNumTran(p.getNumTran() - n);
+					p.setCash(p.getCash() - cash - commi);
 					transaction.setCashO(cash);
 					transaction.setCashT(p.getCash());
 					transaction.setNumAcc(numAcc);
-					transaction.setCommi(p.getCommi());
+					transaction.setCommi(commi);
 					transaction.setType("r");
 					transaction.setDateTra(tran.getDateTra());
-					repository.save(p).subscribe();
 					
-			 return Mono.just(transaction);
-			
-		});		
+					return repository.save(p).flatMap(f -> {
+						 return Mono.just(transaction);
+					});
+				});		
 		  }
 }

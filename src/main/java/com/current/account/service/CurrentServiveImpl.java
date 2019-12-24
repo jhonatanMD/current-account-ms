@@ -31,8 +31,9 @@ public class CurrentServiveImpl  implements ICurrentService{
 	EntityTransaction transaction;
 	List<EntityTransaction> listTransaction;
 	List<String> doc;
-	
-	Boolean ope = false;
+	Double commi;
+	int n;
+	Boolean ope;
 	@Override
 	public Flux<CurrentEntity> allCurrent() {
 		// TODO Auto-generated method stub
@@ -77,7 +78,7 @@ public class CurrentServiveImpl  implements ICurrentService{
 
 	@Override
 	public Mono<EntityTransaction> opeCurrent(String numAcc, String tipo, Double cash) {
-	
+		ope =false;
 		return repository.findByNumAcc(numAcc)
 				.flatMap(p ->{
 						transaction = new EntityTransaction();
@@ -129,30 +130,55 @@ public class CurrentServiveImpl  implements ICurrentService{
 	}
 
 	@Override
-	public Mono<EntityTransaction> opeMovement(String numAcc, String numCard, Double cash,String type) {
+	public Mono<EntityTransaction> opeMovement(String numAcc, String numDest, Double cash,String type) {
 		// TODO Auto-generated method stub
+		ope = false;
 		transaction = new EntityTransaction();
 		return repository.findByNumAcc(numAcc).flatMap(p ->{
 			
 			if(p.getCash() >= cash && p.getNumTran() > 0) {
-				if(type.equals("CC")) {
-					return	webClient.payCreditSC(transaction, p, numAcc, numCard, cash);
-				}else if(type.equals("SA")) {
-					return webClient.opeSaving(transaction, p, numAcc, type, cash);
-				}
-				
-			
+				 commi = 0.0;
+				 n = 1;
+				 ope = true;
 			}else if(p.getCash() >= cash + p.getCommi() && p.getNumTran() == 0){
-				if(type.equals("CC")) {
-					return	webClient.payCreditCC(transaction, p, numAcc, numCard, cash);	
-				}
+				commi = p.getCommi();
+				n = 0;
+				ope = true;
 			}
+
 			
-			return Mono.just(transaction);
-			
+			if(ope) {
+				if(type.equals("CC")) {
+					return	webClient.payCredit(transaction, p, numAcc, numDest, cash,commi,n);
+				}else if(type.equals("SA")) {
+					return webClient.opeSaving(transaction, p, numAcc, numDest, cash,commi,n);
+				}else if(type.equals("CA")) {
+					return repository.findByNumAcc(numDest).flatMap(currentDest ->{
+						
+						transaction.setCashA(p.getCash());
+						p.setNumTran(p.getNumTran() - n);
+						p.setCash(p.getCash() - cash - commi);
+						transaction.setCashO(cash);
+						transaction.setCashT(p.getCash());
+						transaction.setNumAcc(numAcc);
+						transaction.setCommi(commi);
+						transaction.setType("r");
+						transaction.setDateTra(new Date());
+						
+						currentDest.setCash(currentDest.getCash() + cash);
+						
+						return repository.save(currentDest).flatMap(t -> {
+							
+							return repository.save(p).flatMap(r -> {
+								
+								return Mono.just(transaction);
+							});
+						});
+					});
+				}
+			}	
+			return Mono.just(transaction);	
 		});
 	}
 
-	
-	
 }

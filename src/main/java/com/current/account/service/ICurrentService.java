@@ -14,5 +14,5 @@ public interface ICurrentService {
 	Mono<CurrentEntity> findByNumAcc(String numAcc);
 	Mono<EntityTransaction> opeCurrent(String numAcc,String tipo,Double cash);
 	Flux<CurrentEntity> findByDoc(String doc);
-	Mono<EntityTransaction> opeMovement(String numAcc,String numCard,Double cash,String type);
+	Mono<EntityTransaction> opeMovement(String numAcc,String numDest,Double cash,String type);
 }
