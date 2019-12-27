@@ -1,5 +1,7 @@
 package com.current.account.webclient;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
@@ -9,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.current.account.model.CurrentEntity;
 import com.current.account.model.EntityTransaction;
+import com.current.account.model.InfoResponse;
 import com.current.account.repository.ICurrentRepository;
 
 import reactor.core.publisher.Mono;
@@ -59,10 +62,16 @@ public class CallWebClient {
 					transaction.setCommi(commi);
 					transaction.setType("r");
 					transaction.setDateTra(tran.getDateTra());
-					
 					return repository.save(p).flatMap(f -> {
 						 return Mono.just(transaction);
 					});
 				});		
 		  }
+	 
+	 public Mono<InfoResponse> responde (List<String> numDoc){
+		 return client.post().uri("/bank/api/getDeudas").syncBody(numDoc)
+			.retrieve().bodyToMono(InfoResponse.class).flatMap(rs -> {	
+					return Mono.just(rs);
+			});
+	 }
 }

@@ -18,8 +18,6 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class CurrentServiveImpl  implements ICurrentService{
-	
-
 
 	@Autowired
 	ICurrentRepository repository;
@@ -44,19 +42,35 @@ public class CurrentServiveImpl  implements ICurrentService{
 	public Mono<CurrentEntity> saveCurrent(final CurrentEntity current) {
 		// TODO Auto-generated method stub
 		doc = new ArrayList<>();
-		
+		current.getHeads().forEach(head -> doc.add(head.getDocClien()));
 		if(current.getTypeCli().equals("B")) {
-			repository.save(current).subscribe();
-			return Mono.just(current);
+			  webClient.responde(doc).flatMap(s ->{
+				  if(s.getMsg().equals("")){
+					 return repository.save(current).flatMap(cr->{
+						 return Mono.just(current); 
+					 });
+						
+				  }else {
+					  return Mono.just(current);
+				  }
+			  });
+			
 		}else  {
-			
-			current.getHeads().forEach(head -> doc.add(head.getDocClien()));
 			 return repository.findBytitularesByDocProfiles(doc,"S",current.getProfile(),current.getBank())
-					.switchIfEmpty(repository.save(current).flatMap(sv->{
-				return Mono.just(sv);
-			})).next();
-		}
-			
+					.switchIfEmpty(
+						  webClient.responde(doc).flatMap(s ->{
+							if(s.getMsg().equals("")) {	
+								return repository.save(current).flatMap(cur->{
+									return Mono.just(cur);
+								});
+							 }else {
+								 return Mono.just(current);
+							 }
+						  })
+					).next();
+			}
+		return Mono.just(current);
+		
 	}
 		
 	@Override
