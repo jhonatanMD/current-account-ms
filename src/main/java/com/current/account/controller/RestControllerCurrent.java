@@ -1,5 +1,7 @@
 package com.current.account.controller;
 
+import java.text.ParseException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +41,13 @@ public class RestControllerCurrent {
 	@GetMapping("/getCurrentNumDoc/{numDoc}")
 	public Flux<CurrentEntity> getCurrentNumDoc(@PathVariable("numDoc") String numDoc){
 		return imple.findByDoc(numDoc);
+	}
+	
+	
+	@GetMapping("/getCurrentDates/{dt1}/{dt2}/{bank}")
+	Flux<CurrentEntity> getCurrentDates(@PathVariable("dt1") String dt1
+			,@PathVariable("dt2") String dt2,@PathVariable("bank") String bank) throws ParseException{	
+		return imple.findByBankAndDateOpenBetween(bank, dt1, dt2);
 	}
 	
 	

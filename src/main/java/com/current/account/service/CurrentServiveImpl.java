@@ -1,5 +1,7 @@
 package com.current.account.service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +30,7 @@ public class CurrentServiveImpl  implements ICurrentService{
 	
 	EntityTransaction transaction;
 	List<EntityTransaction> listTransaction;
+	SimpleDateFormat format;
 	List<String> doc;
 	Double commi;
 	int n;
@@ -42,34 +45,35 @@ public class CurrentServiveImpl  implements ICurrentService{
 	public Mono<CurrentEntity> saveCurrent(final CurrentEntity current) {
 		// TODO Auto-generated method stub
 		doc = new ArrayList<>();
+		current.setDateOpen(new Date());
 		current.getHeads().forEach(head -> doc.add(head.getDocClien()));
 		if(current.getTypeCli().equals("B")) {
-			  webClient.responde(doc).flatMap(s ->{
-				  if(s.getMsg().equals("")){
+			/*  webClient.responde(doc).flatMap(s ->{
+				  if(s.getMsg().equals("")){*/
 					 return repository.save(current).flatMap(cr->{
 						 return Mono.just(current); 
 					 });
 						
-				  }else {
+			/*	  }else {
 					  return Mono.just(current);
 				  }
-			  });
+			  });*/
 			
 		}else  {
 			 return repository.findBytitularesByDocProfiles(doc,"S",current.getProfile(),current.getBank())
 					.switchIfEmpty(
-						  webClient.responde(doc).flatMap(s ->{
+					/*webClient.responde(doc).flatMap(s ->{
 							if(s.getMsg().equals("")) {	
-								return repository.save(current).flatMap(cur->{
+								return*/ repository.save(current).flatMap(cur->{
 									return Mono.just(cur);
-								});
-							 }else {
+								})
+						/*	 }else {
 								 return Mono.just(current);
 							 }
-						  })
+						  })*/
 					).next();
 			}
-		return Mono.just(current);
+	//	return Mono.just(current);
 		
 	}
 		
@@ -193,6 +197,12 @@ public class CurrentServiveImpl  implements ICurrentService{
 			}	
 			return Mono.just(transaction);	
 		});
+	}
+
+	@Override
+	public Flux<CurrentEntity> findByBankAndDateOpenBetween(String bank, String dt1, String dt2) throws ParseException {
+		format = new SimpleDateFormat("yyyy-MM-dd");
+		return repository.findByBankAndDateOpenBetween( bank, format.parse(dt1) , format.parse(dt2));
 	}
 
 }

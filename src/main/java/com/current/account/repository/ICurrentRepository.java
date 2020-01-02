@@ -1,5 +1,6 @@
 package com.current.account.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.Query;
@@ -25,5 +26,6 @@ public interface ICurrentRepository  extends ReactiveMongoRepository<CurrentEnti
 	@Query("{'heads.docClien':  ?0 } ")
 	Flux<CurrentEntity> findByDoc(String doc);
 
+	Flux<CurrentEntity> findByBankAndDateOpenBetween(String bank,Date dt1 ,Date dt2);
 	
 }
